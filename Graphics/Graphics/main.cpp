@@ -1,151 +1,117 @@
 ﻿#include "Manager.h"
 #include "shader.h"
+#include "Objects.h"
+#include "AudioManager.h"
 #include "VBO.h"
 #include "VAO.h"
 #include "EBO.h"
 #include <vector>
+#include<fmod.hpp>
+#include<fmod.h>
+#include<fmod_errors.h>
 
 // settings
 GLFWwindow* window = nullptr;
 const int width = 800.0f, height = 600.0f;
 
-// bat speed and key events
-float testSpeed = 2;
-
-bool isLeftBatUp = false;
-bool isLeftBatDown = false;
-bool isRighBatUp = false;
-bool isRighBatDown = false;
-
-// ball speed and key events
+// bat and ball speed
+float batSpeed = 1.0f;
 float ballSpeedVertical = 1.0f;
 float ballSpeedHorizontal = 0.5f;
 bool activateBallUpSpeed = false;
+
 // box left settings
-glm::vec2 batPositionLeft(0.0f);
-glm::vec2 batScaleLeft(0.0f);
+glm::vec3 batPositionLeft(0.0f); glm::vec2 batScaleLeft(0.0f);
 // box right settings
-glm::vec2 batPositionRight(0.0f);
-glm::vec2 batScaleRight(0.0f);
+glm::vec3 batPositionRight(0.0f); glm::vec2 batScaleRight(0.0f);
 
 // Ball settings
-glm::vec2 ballPosition(0.0f);
-glm::vec2 ballScale(0.0f);
+glm::vec3 ballPosition(0.0f); glm::vec2 ballScale(0.0f);
 
-bool isWithinBounds(const glm::vec2& boxPos, float boxSize) // will check inside BatMovement function
-{
-	const float halfSize = boxSize / 2.0f;
-	float topEdge = boxPos.y + halfSize;
-	float bottomEdge = boxPos.y - halfSize;
-
-	return (topEdge <= 100.0f && bottomEdge >= 0.0f);
-}
-
-void BatMovement(float& speed, glm::vec2& batPosLeft, glm::vec2& batPosRight, float boxSize)
-{
-	if (isLeftBatUp)
-	{
-		glm::vec2 boxPos = batPosLeft;
-		boxPos.y += speed;
-
-		if (isWithinBounds(boxPos, boxSize))
-			batPosLeft = boxPos;
-
-		isLeftBatUp = false;
-	}
-	if (isLeftBatDown)
-	{
-		glm::vec2 boxPos = batPosLeft;
-		boxPos.y -= speed;
-
-		if (isWithinBounds(boxPos, boxSize))
-			batPosLeft = boxPos;
-
-		isLeftBatDown = false;
-	}
-
-	if (isRighBatUp)
-	{
-		glm::vec2 boxPos = batPosRight;
-		boxPos.y += speed;
-
-		if (isWithinBounds(boxPos, boxSize))
-			batPosRight = boxPos;
-
-		isRighBatUp = false;
-	}
-	if (isRighBatDown)
-	{
-		glm::vec2 boxPos = batPosRight;
-		boxPos.y -= speed;
-
-		if (isWithinBounds(boxPos, boxSize))
-			batPosRight = boxPos;
-
-		isRighBatDown = false;
-	}
-}
+// Audio settings
+bool batSound = false;
+bool wallSound = false;
 
 void BallMovement()
 {
 	ballPosition.x += ballSpeedHorizontal;
 	ballPosition.y += ballSpeedVertical;
 
-	if (ballPosition.x + ballScale.x >= batPositionRight.x && ballPosition.y + ballScale.y / 2.0f <= 
-		batPositionRight.y + batScaleRight.y / 2.0f && ballPosition.y - ballScale.y / 2.0f >=
-		batPositionRight.y - batScaleRight.y / 2.0f)
+	// bat right
+	// with extra condtions to prevent ball glitching through the bats when its below/above the bat which
+	// was making the ball glitch inside the bats. so when the ball hits any corner of the bat it will
+	// now simply go vertically opposite side it came from.
+	if (ballPosition.x + ballScale.x / 2.0f >= batPositionRight.x - batScaleRight.x / 2.0f)
 	{
-		ballSpeedHorizontal = -1.0f;
-		std::cout << "going Left\n";
-	}
-	else if ((ballPosition.x - ballScale.x <= batPositionLeft.x && ballPosition.y + ballScale.y / 2.0f <=
-		batPositionLeft.y + batScaleLeft.y / 2.0f && ballPosition.y - ballScale.y / 2.0f >=
-		batPositionLeft.y - batScaleLeft.y / 2.0f))
-	{
-		ballSpeedHorizontal = 1.0f;
-		std::cout << "going Right\n";
+		if (ballPosition.y + ballScale.y / 2.0f <= batPositionRight.y + batScaleRight.y / 2.0f &&
+			ballPosition.y - ballScale.y / 2.0f >= batPositionRight.y - batScaleRight.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = -1.0f;
+			std::cout << "going Left\n";
+
+		}
+		else if (ballPosition.y - ballScale.y / 2.0f <= batPositionRight.y + batScaleRight.y / 2.0f &&
+			ballPosition.y + ballScale.y / 2.0f >= batPositionRight.y + batScaleRight.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = -1.0f;
+			ballSpeedVertical = 1.0f;
+			std::cout << "going Left UP\n";
+		}
+		else if (ballPosition.y + ballScale.y / 2.0f >= batPositionRight.y - batScaleRight.y / 2.0f &&
+			ballPosition.y - ballScale.y / 2.0f <= batPositionRight.y - batScaleRight.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = -1.0f;
+			ballSpeedVertical = -1.0f;
+			std::cout << "going Left Down\n";
+		}
 	}
 
+	// bat Left
+	if (ballPosition.x - ballScale.x / 2.0f <= batPositionLeft.x + batScaleLeft.x / 2.0f)
+	{
+		if (ballPosition.y + ballScale.y / 2.0f <= batPositionLeft.y + batScaleLeft.y / 2.0f &&
+			ballPosition.y - ballScale.y / 2.0f >= batPositionLeft.y - batScaleLeft.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = 1.0f;
+			std::cout << "going Right\n";
+
+		}
+		else if (ballPosition.y - ballScale.y / 2.0f <= batPositionLeft.y + batScaleLeft.y / 2.0f &&
+			ballPosition.y + ballScale.y / 2.0f >= batPositionLeft.y + batScaleLeft.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = 1.0f;
+			ballSpeedVertical = 1.0f;
+			std::cout << "going Right UP\n";
+		}
+		else if (ballPosition.y + ballScale.y / 2.0f >= batPositionLeft.y - batScaleLeft.y / 2.0f &&
+			ballPosition.y - ballScale.y / 2.0f <= batPositionLeft.y - batScaleLeft.y / 2.0f)
+		{
+			batSound = true;
+			ballSpeedHorizontal = 1.0f;
+			ballSpeedVertical = -1.0f;
+			std::cout << "going Right Down\n";
+		}
+	}
+	// vertical walls
+	// Issue => its being checked more than once making the sound play twice(solved)
+	// changing ball at Y in first iteration will prevent checking more than once
 	if (ballPosition.y + ballScale.y / 2.0f >= 100.0f)
 	{
+		ballPosition.y -= 0.5f;
 		ballSpeedVertical = -0.7f;
+		wallSound = true;
 	}
 	else if (ballPosition.y - ballScale.y / 2.0f <= 0.0f)
 	{
+		ballPosition.y += 0.5f;
 		ballSpeedVertical = 0.7f;
+		wallSound = true;
 	}
-}
-
-void RestartGame()
-{
-	if (ballPosition.x > 101.0f || ballPosition.x < -1.0f)
-	{
-		ballPosition = glm::vec2(50.0f, 50.0f);
-		ballSpeedVertical = 0.0f;
-		ballSpeedHorizontal = 0.7f;
-		activateBallUpSpeed = true;
-	}
-	if (ballPosition.x + ballScale.x >= batPositionRight.x && activateBallUpSpeed)
-	{
-		ballSpeedVertical = 0.7f;
-		activateBallUpSpeed = false;
-	}
-}
-
-void HandleInputs(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		isLeftBatUp = true;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		isLeftBatDown = true;
-
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		isRighBatUp = true;
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		isRighBatDown = true;
 }
 
 void ConstructCircle(std::vector<glm::vec3>&vertices, int vCount)
@@ -184,22 +150,22 @@ void DrawCircle(glm::mat4& model, Shader& shader, float uniformScale, float xTra
 	glDrawArrays(GL_TRIANGLES, 0, count); // set and send the matrix before draw
 }
 
-void DrawBat(glm::mat4& model, Shader& shader, glm::vec2 &position, glm::vec2 &scale)
-{
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(position, 0.0f));
-	model = glm::scale(model, glm::vec3(scale, 0.0f));
-	shader.setMat4("model", model);
-
-	// Draw
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // set and send the matrix before draw
-}
-
 int main()
 {
+	// Init OpenGL
 	Manager manager(window, width, height, "Pong", false);
+	Objects objLeft;
+	Objects objRight;
+	Objects objBall;
 
 	Shader shader("MyFolder/ShaderFiles/Pong.vs", "MyFolder/ShaderFiles/Pong.fs");
+	
+	// Init Audio
+	FMOD_RESULT result;
+	FMOD::System* system = nullptr;
+	FMOD::Sound* sound = nullptr;
+	
+	AudioManager audio(result, system, sound);
 
 	// circle construction
 	/*std::vector<glm::vec3>circleVertices;
@@ -218,6 +184,7 @@ int main()
 		 0.5f,  0.5f, 0.0f,  // top right
 		-0.5f,  0.5f, 0.0f   // top left
 	};
+
 	unsigned int batIndices[6] =
 	{
 		0, 1, 2,  // first Triangle
@@ -254,21 +221,24 @@ int main()
 
 	// setting bats`s/ball`s scale and transforms
 	batPositionLeft = glm::normalize(batPositionLeft);
-	batPositionLeft = glm::vec2(1.5f, 55.0f);
+	batPositionLeft = glm::vec3(1.5f, 50.0f, 0.0f);
 	batScaleLeft = glm::vec2(1.5f, 15.0f);
 
 	batPositionRight = glm::normalize(batPositionRight);
-	batPositionRight = glm::vec2(98.5f, 55.0f);
+	batPositionRight = glm::vec3(98.5f, 50.0f, 0.0f);
 	batScaleRight = glm::vec2(1.5f, 15.0f);
 
 	ballPosition = glm::normalize(ballPosition);
-	ballPosition = glm::vec2(50.0f, 50.0f);
+	ballPosition = glm::vec3(50.0f, 50.0f, 0.0f);
 	ballScale = glm::vec2(1.5f, 1.9f);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		// Input
-		HandleInputs(window);
+		manager.KeyEvents(window);
+
+		// Audio
+		manager.HandleAudio(audio, system, sound, batSound, wallSound);
 
 		// Rendering
 		glClearColor(0.0f, 0.0f, 0.0f, 1);
@@ -276,18 +246,16 @@ int main()
 
 		// Bats
 		VAO1.Bind();
-		// Move and check Box colliders
-		DrawBat(model, shader, batPositionLeft, batScaleLeft); // Bat Left
 
-		DrawBat(model, shader, batPositionRight, batScaleRight); // right bat
-
-		DrawBat(model, shader, ballPosition, ballScale); // ball
-
-		BatMovement(testSpeed, batPositionLeft, batPositionRight, batScaleLeft.y);
+		objLeft.MoveObjects(manager, batPositionLeft, batPositionRight, batScaleLeft.y, batSpeed);
+		objLeft.DrawObjects(model, shader, batPositionLeft, batScaleLeft);
+		objRight.DrawObjects(model, shader, batPositionRight, batScaleRight);
+		objBall.DrawObjects(model, shader, ballPosition, ballScale);
 
 		BallMovement();
 
-		RestartGame();
+		manager.RestartGame(ballPosition, ballScale, batPositionRight, batScaleRight, 
+			ballSpeedVertical, ballSpeedHorizontal, activateBallUpSpeed);
 
 		// circle
 		//VAO2.Bind();
@@ -300,6 +268,8 @@ int main()
 	// cleanup
 	VAO1.Delete();
 	VBO1.Delete();
+	sound->release();
+	system->release();
 	//VAO2.Delete();
 	//VBO2.Delete();
 	glfwTerminate();

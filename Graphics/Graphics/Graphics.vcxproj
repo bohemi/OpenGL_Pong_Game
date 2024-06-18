@@ -104,13 +104,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\model(ASSIMP)\include\assimp;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLM\include;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\imGui;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLFW\include;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLEW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\FMOD\studio\inc;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\FMOD\core\inc;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\model(ASSIMP)\include\assimp;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLM\include;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\imGui;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLFW\include;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLEW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\model(ASSIMP)\lib;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLFW\lib-vc2022;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLEW\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\FMOD\studio\lib\x64;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\FMOD\core\lib\x64;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\model(ASSIMP)\lib;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLFW\lib-vc2022;C:\Visual_Saves\OpenGL_Pong_Game\Graphics\Linking\GLEW\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc140-mt.lib;fmodstudioL_vc.lib;fmodL_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,6 +127,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>fmodstudio_vc.lib;fmod_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -137,6 +138,8 @@
     <ClCompile Include="..\Linking\imGui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Linking\imGui\imgui_tables.cpp" />
     <ClCompile Include="..\Linking\imGui\imgui_widgets.cpp" />
+    <ClCompile Include="AudioManager.cpp" />
+    <ClCompile Include="Objects.cpp" />
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Manager.cpp" />
@@ -155,6 +158,8 @@
     <ClInclude Include="..\Linking\imGui\imstb_rectpack.h" />
     <ClInclude Include="..\Linking\imGui\imstb_textedit.h" />
     <ClInclude Include="..\Linking\imGui\imstb_truetype.h" />
+    <ClInclude Include="AudioManager.h" />
+    <ClInclude Include="Objects.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="main.h" />
