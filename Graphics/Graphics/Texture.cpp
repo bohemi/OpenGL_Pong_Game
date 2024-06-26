@@ -29,15 +29,19 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 	glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	// Extra lines in case you choose to use GL_CLAMP_TO_BORDER
+	// GL_CLAMP_TO_BORDER
 	// float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
 	// glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
 	// Assigns the image to the OpenGL Texture object
-	glTexImage2D(texType, 0, GL_RGBA, widthImg, heightImg, 0, format, pixelType, bytes);
-
-	// Generates MipMaps
-	glGenerateMipmap(texType);
+	if (bytes)
+	{
+		glTexImage2D(texType, 0, GL_RGBA, widthImg, heightImg, 0, format, pixelType, bytes);
+		// Generates MipMaps
+		glGenerateMipmap(texType);
+	}
+	else
+		std::cout << "Texture data not uploaded\n";
 
 	// Deletes the image data as it is already in the OpenGL Texture object
 	stbi_image_free(bytes);
@@ -49,13 +53,19 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 void Texture::texUnit(Shader& shader, const char* uniform, unsigned int unit) // was GLUint..changed it!
 {
 	// Gets the location of the uniform
-	unsigned int texUni = glGetUniformLocation(shader.ID, uniform);
+	//unsigned int texUni = glGetUniformLocation(shader.ID, uniform);
+	shader.setInt(uniform, unit);
 
 	// Shader needs to be activated before changing the value of a uniform
 	shader.use();
 
 	// Sets the value of the uniform
-	glUniform1i(texUni, unit);
+	//glUniform1i(texUni, unit);
+}
+
+void Texture::ActivateTex(GLenum textureNumber)
+{
+	glActiveTexture(textureNumber);
 }
 
 void Texture::Bind()

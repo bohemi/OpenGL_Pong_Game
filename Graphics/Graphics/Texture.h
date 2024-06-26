@@ -14,6 +14,8 @@ public:
 	// Assigns a texture unit to a texture
 	void texUnit(Shader& shader, const char* uniform, unsigned int unit);
 
+	void ActivateTex(GLenum textureNumber);
+
 	// Binds a texture
 	void Bind();
 
